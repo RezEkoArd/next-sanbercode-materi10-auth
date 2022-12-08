@@ -1,5 +1,6 @@
 import axios from 'axios'
-import React, { useEffect, useState } from 'react'
+import React, {useContext, useEffect, useState } from 'react'
+import { GlobalContext } from '../../context/GlobalContext'
 
 export async function getServerSideProps(){
     let res = await fetch(`https://backendexample.sanbercloud.com/api/contestants`)
@@ -14,15 +15,18 @@ export async function getServerSideProps(){
 }   
 
 export default function Static({data}) {
-    const [dataContestant, setDataContestant] = useState(data)    
-    const  [input, setInput] = useState({
-        name: "",
-        gender: "",
-        height: ""
-    })
+    // ambil dari context
+    const {state, handle} = useContext(GlobalContext)
+    
+    let {input, setInput,
+        fetchStatus, setFetchStatus,
+        currentId, setCurrentId} = state
 
-    const [fetchStatus, setFetchStatus] = useState(false)
-    const [currentId, setCurrentId] = useState(-1)
+    let {handleDelete , handleEdit,
+        handleChange, handleSubmit} = handle
+
+    const [dataContestant, setDataContestant] = useState(data)    
+
 
     let fetchData = async () => {
         let res = await axios.get(`https://backendexample.sanbercloud.com/api/contestants`)
@@ -36,65 +40,6 @@ export default function Static({data}) {
             setFetchStatus(false)
         }
     }, [fetchStatus, setFetchStatus])
-
-  
-    const handleDelete = (event) => {
-        let idData = event.target.value
-
-        axios.delete(`https://backendexample.sanbercloud.com/api/contestants/${idData}`)
-        .then((res) => {
-            console.log(res)
-            setFetchStatus(true)
-        })
-    }
-
-    const handleEdit = (event) => {
-        let idData = event.target.value
-
-        axios.get(`https://backendexample.sanbercloud.com/api/contestants/${idData}`)
-        .then((res) => {
-            console.log(res)
-            setCurrentId(res.data.id)
-
-            setInput({
-                name : res.data.name,
-                gender: res.data.gender,
-                height: res.data.height
-
-            })
-        })
-    }
-
-    const handleChange = (event) => {
-        setInput({...input, [event.target.name]: event.target.value})
-    }
-
-    const handleSubmit = (event) => {
-        event.preventDefault()
-
-        let {name, gender, height} = input
-
-        if(currentId === -1 ){
-            axios.post(`https://backendexample.sanbercloud.com/api/contestants`, {name, gender, height})
-            .then((res) => {
-                setFetchStatus(true)
-            })
-        } else {
-            axios.put(`https://backendexample.sanbercloud.com/api/contestants/${currentId}`, {name, gender, height})
-            .then((res) => {
-                setFetchStatus(true)
-            })
-        }
-
-        setInput({
-            name: "",
-            gender: "",
-            height: ""
-        })
-
-        setCurrentId(-1)
-    }
-
 
     return (
         <div className='w-1/2 mx-auto mt-20  '>
